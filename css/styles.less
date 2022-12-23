@@ -1,0 +1,120 @@
+* {
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+    overscroll-behavior: none;
+}
+.material-symbols-rounded { 
+    display: flex ;
+    transition: opacity 0.2s ease-in, height 0.2s linear;
+}
+.icons-hidden .material-symbols-rounded { 
+    opacity: 0;
+}
+::-webkit-scrollbar {
+    width: 8px;
+}
+::-webkit-scrollbar-track {
+    background: none;
+}
+::-webkit-scrollbar-thumb {
+    background: var(--md-sys-color-background);
+    border-radius: 4px;
+    transition: all 0.2s cubic-bezier(0.19, 1, 0.22, 1);
+}
+::-webkit-scrollbar-thumb:hover {
+    background: var(--md-sys-color-background);
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    overflow: overlay;
+    background: var(--md-sys-color-background);
+    font-family: 'Roboto Flex', sans-serif;
+}
+
+/* ----------------------------------------------------------------------------------------------------------------------------------------- */
+#root {
+    display: grid;
+    grid: 80px min-content 80px / 1fr;
+}
+header,
+footer {
+    padding: 10px 50px;
+    margin: 0 40px;
+    .headline-large();
+    color: var(--md-sys-color-outline-variant);
+    display: flex;
+    align-items: center;
+}
+header {
+    grid-row: 1 / 2;
+    border-bottom: 1px solid var(--md-sys-color-outline-variant);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+
+    img {
+        height: 140%;
+    }
+}
+footer {
+    grid-row: -2 / -1;
+    border-top: 1px solid var(--md-sys-color-outline-variant);
+}
+main {
+    min-height: calc(100vh - 160px);
+    padding: 40px;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 8px;
+}
+.card {
+    height: max-content;
+    display: grid;
+    grid: repeat(5, min-content) / 1fr;
+    align-items: center;
+    justify-content: center;
+    color: var(--md-sys-color-on-surface);
+    .material-elevated-card();
+
+    .headline {
+        .title-large();
+    }
+    .start-date {
+        .body-medium();
+        color: var(--md-sys-color-on-surface-variant)
+    }
+    .end-date {
+        margin: 16px -8px;
+        .material-filled-card();
+    }
+    .participants {
+        display: flex;
+        flex-direction: column;
+        border: 1px solid var(--md-sys-color-outline-variant);
+        border-radius: 8px;
+        padding: 12px 16px 8px;
+        position: relative;
+
+        span {
+            position: absolute;
+            top: -8px;
+            padding: 0 4px;
+            .surface-tint();
+            .body-small();
+            color: var(--md-sys-color-on-surface-variant);
+        }
+
+        .participant {
+            .body-medium();
+        }
+    }
+    .show-trades {
+        .material-filled-button();
+        .without-icon();
+        justify-self: end;
+        margin-top: 20px;
+    }
+}

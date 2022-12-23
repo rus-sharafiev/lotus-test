@@ -1,0 +1,7 @@
+node_modules
+build
+ymaps
+.hintrc
+.htaccess
+_build.mjs
+_watch.mjs
