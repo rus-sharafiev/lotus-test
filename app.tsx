@@ -33,6 +33,7 @@ let trades: Trade[] = [{
             id: 111,
             name: 'ООО Первый',
             bids: [
+                '-',
                 '80',
                 '24',
                 '30%',
@@ -45,6 +46,7 @@ let trades: Trade[] = [{
             id: 222,
             name: 'ООО Второй',
             bids: [
+                '-',
                 '90',
                 '24',
                 '100%',
@@ -57,6 +59,7 @@ let trades: Trade[] = [{
             id: 333,
             name: 'ООО Третий',
             bids: [
+                '-',
                 '75',
                 '22',
                 '60%',
@@ -69,6 +72,7 @@ let trades: Trade[] = [{
             id: 444,
             name: 'ООО Четвертый',
             bids: [
+                '-',
                 '120',
                 '36',
                 '50%',
@@ -79,6 +83,12 @@ let trades: Trade[] = [{
         }
     ]
 }];
+
+var decCache: number[] = [], decCases = [2, 0, 1, 1, 1, 2];
+const declination = (number: number, titles: string[]) => {
+    if (!decCache[number]) decCache[number] = number % 100 > 4 && number % 100 < 20 ? 2 : decCases[Math.min(number % 10, 5)];
+    return titles[decCache[number]];
+}
 
 const startDate = (stringDate: string): string => {
     let date = new Date(stringDate);
@@ -98,11 +108,12 @@ const timeLeftFn = (endDate: string): string => {
     let minutesms = diff % (60*1000);
     let sec = Math.floor(minutesms / 1000);
     let addZero = (num: number) => { return num < 10 ? '0' + num : num }
+    let daysLeft = days > 0 ? days + declination(days, [' день ', ' дня ', ' дней ']) : '';
 
-    return days + " days " + addZero(hours) + ":" + addZero(minutes) + ":" + addZero(sec);
+    return daysLeft + addZero(hours) + ":" + addZero(minutes) + ":" + addZero(sec);
 }
 
-const TradeCard = (props: {trade: Trade}) => {
+const TradeCard = (props: {trade: Trade, setTrade: (trade: Trade) => void }) => {
 
     return (                            
         <div className='card'>
@@ -115,16 +126,43 @@ const TradeCard = (props: {trade: Trade}) => {
                     ?   props.trade.participants.map((participant: Participant) =>
                             <div className='participant' key={participant.id}>{participant.name}</div>
                         )
-                    : 'Нет участников'
+                    :   'Нет участников'
                 }
             </div>
-            <button type='button' className='show-trades'>Ход торгов</button> 
+            <button type='button' className='show-trades' onClick={() => props.setTrade(props.trade)}>Ход торгов</button> 
         </div>
     )
 }
 
+const Trade = (props: { trade: Trade | undefined, setTrade: (trade: undefined) => void }) => {
+
+    if (props.trade) {
+        return (
+            <div className='trade-info-container'>
+                <div className='trade-info'>
+                    <div className='headline'>{props.trade.name}</div>
+                    <div className='start-date'>{startDate(props.trade.startDate)}</div>
+                    <div className='participants'>
+                        <span>Участники торгов</span>
+                        {props.trade.participants.length != 0
+                            ?   props.trade.participants.map((participant: Participant) =>
+                                    <div className='participant' key={participant.id}>{participant.name}</div>
+                                )
+                            :   'Нет участников'
+                        }
+                    </div>
+                    <button type='button' className='show-trades' onClick={() => props.setTrade(undefined)}>Закрыть</button>
+                </div>
+            </div>
+        )
+    } else {
+        return (null)
+    }
+}
+
 const App = () => {
     const [update, setUpdate] = useState(0);
+    const [activeTrade, setActiveTrade] = useState<Trade | undefined>(undefined);
 
     let IntervalId: any;
     if (!IntervalId) {
@@ -140,16 +178,16 @@ const App = () => {
             <main>
                 {trades.length != 0 
                     ?   trades.map((trade: Trade) =>
-                            < TradeCard trade={trade} key={trade.id}/>
+                            <TradeCard trade={trade} key={trade.id} setTrade={setActiveTrade}/>
                         )
-                    : 'Нет активных торгов'}
+                    :   'Нет активных торгов'}
             </main>
-            
             <header>
                 Header
                 <img src='/img/LOGO_LOTUS.svg' alt='logo' />
             </header>
             <footer>Footer</footer>
+            <Trade trade={activeTrade} setTrade={setActiveTrade}/>
         </>
     );
 }

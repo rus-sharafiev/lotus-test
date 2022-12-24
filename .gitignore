@@ -3,5 +3,6 @@ build
 ymaps
 .hintrc
 .htaccess
-_build.mjs
-_watch.mjs
+css/index.less
+css/material-tokens.less
+css/mixins.less
