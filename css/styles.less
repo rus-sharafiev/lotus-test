@@ -89,6 +89,9 @@ main {
     .end-date {
         margin: 16px -8px;
         .material-filled-card();
+        .title-large();
+        color: var(--md-sys-color-on-surface-variant);
+        text-align: center;
     }
     .participants {
         display: flex;
@@ -116,5 +119,108 @@ main {
         .without-icon();
         justify-self: end;
         margin-top: 20px;
+    }
+}
+.trade-scrim {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+
+    &::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background-color: var(--md-sys-color-scrim);
+        opacity: 0.5;
+    }
+}
+.trade-info {
+    width: 80%;
+    height: 80%;
+    padding: 16px;
+    border-radius: 12px;
+    background-color: var(--md-sys-color-surface);
+    z-index: 1;
+    overflow-x: auto;
+
+    display: grid;
+    grid: min-content min-content 1fr 50px / 1fr;
+
+    .headline {
+        .title-large();
+        padding: 8px 8px 16px;
+        border-bottom: 1px solid var(--md-sys-color-outline-variant);
+
+        span {
+            color: var(--md-sys-color-on-surface-variant);
+            font-weight: 100;
+        }
+    }
+
+    .info {
+        .title-small();
+        margin: 8px 8px 16px;
+        padding: 4px 8px;
+        color: var(--md-sys-color-on-primary-container);
+        background-color: var(--md-sys-color-primary-container);
+        width: -moz-fit-content;
+        width: fit-content;
+        border-radius: 4px;
+    }
+
+    .close-trade {
+        .material-filled-button();
+        .with-icon();
+        justify-self: end;
+        align-self: end;
+    }
+
+    table, td {
+        border: none;
+        border-collapse: collapse;
+        padding: 8px 16px;
+        height: min-content;
+    }
+
+    table {
+
+        tr:nth-child(2n+3) {
+            background-color: rgba(var(--md-sys-color-surface-tint--rgb), 0.05); 
+        }
+
+        .timer {
+            .material-filled-card();
+            .title-large();
+            display: grid;
+            grid: 1fr / 1fr min-content;
+            gap: 16px;
+
+            div {
+                text-align: center;
+            }
+
+            span {
+                color: var(--md-sys-color-primary);
+            }
+        }
+
+        td .participant {
+            display: flex;
+            height: 100%;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-end;
+            width: max-content;
+            max-width: 150px;
+            margin: auto;
+        }
+
+        .bid {            
+            display: flex;
+            justify-content: center;
+        }
     }
 }
