@@ -128,6 +128,8 @@ main {
     align-items: center;
     justify-content: center;
     z-index: 100;
+    -webkit-backdrop-filter: blur(2px);
+    backdrop-filter: blur(2px);
 
     &::before {
         content: '';
@@ -171,11 +173,22 @@ main {
         border-radius: 4px;
     }
 
-    .close-trade {
-        .material-filled-button();
-        .with-icon();
+    .btns {
         justify-self: end;
         align-self: end;
+        display: flex;
+        gap: 8px;
+
+        .next {
+            .material-outlined-button();
+            .with-icon();
+        }
+
+        .close {
+            .material-filled-button();
+            .with-icon();
+        }
+        
     }
 
     table, td {
@@ -183,6 +196,11 @@ main {
         border-collapse: collapse;
         padding: 8px 16px;
         height: min-content;
+        min-width: 200px;
+    }
+
+    .turn {
+        height: 60px;
     }
 
     table {
@@ -196,7 +214,6 @@ main {
             .title-large();
             display: grid;
             grid: 1fr / 1fr min-content;
-            gap: 16px;
 
             div {
                 text-align: center;
@@ -221,6 +238,22 @@ main {
         .bid {            
             display: flex;
             justify-content: center;
+        }
+
+        .price {
+            font-weight: 600;
+        }
+
+        .price-0 {
+            color: #357cb8;
+        }
+
+        .price-1 {
+            color: #aa4645;
+        }
+
+        .price-2 {
+            color: #3c763d;
         }
     }
 }

@@ -1,4 +1,0 @@
-[1] Watching directory for file changes.
-[0] [watch] build finished, watching for changes...
-[0] esbuild app.tsx --outfile=build/index.js --bundle --watch exited with code SIGINT
-[1] less-watch-compiler css build index.less exited with code SIGINT

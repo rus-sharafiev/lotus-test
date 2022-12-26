@@ -4,7 +4,8 @@ import { BrowserRouter, Routes, Route, NavLink } from "react-router-dom";
 
 interface Participant {
     id: number;
-    turn: string;
+    activeTurn: number;
+    turnEnds: string;
     name: string;
     bids: string[][];
 }
@@ -37,10 +38,12 @@ const startDate = (stringDate: string): string => {
     return date.toLocaleString('ru-RU');
 }
 
-const timeLeftFn = (endDate: string): string => {
-    let end = new Date(endDate).valueOf();
-    let today = Date.now();
-    let diff = end - today;
+const timeLeft = ( end: string ) => {
+
+    let endTime = new Date(end).valueOf();
+    let mskTime = new Date().toLocaleString(undefined, {timeZone: "Europe/Moscow"});
+    let today = new Date(mskTime).valueOf();
+    let diff = endTime - today - 3000;
 
     let days = Math.floor(diff / (24*60*60*1000));
     let daysms = diff % (24*60*60*1000);
@@ -53,19 +56,25 @@ const timeLeftFn = (endDate: string): string => {
     let daysLeft = days > 0 ? days + declination(days, [' день ', ' дня ', ' дней ']) : '';
 
     if (days >= 0 && hours >= 0 && minutes >= 0 && sec >= 0) {
-        return daysLeft + addZero(hours) + ':' + addZero(minutes) + ':' + addZero(sec);
+        return daysLeft + addZero(hours) + ':' + addZero(minutes) + ':' + addZero(sec)
     } else {
-        return ''
+        return 'Окончен'
     }
 }
 
-const TradeCard = (props: {trade: Trade, setTrade: (trade: Trade) => void }) => {
+const TradeCard = (props: {trade: Trade, setTradeId: (tradeId: number) => void }) => {
+    const [tick, setTick] = useState(0);
+
+    useEffect(() => {
+        let timer = setInterval(() => setTick(Math.random()), 1000);
+        return () => clearInterval(timer);
+    }, []);
 
     return (                            
         <div className='card'>
             <div className='headline'>{props.trade.name}</div>
             <div className='start-date'>{startDate(props.trade.startDate)}</div>
-            <div className='end-date'>{timeLeftFn(props.trade.endDate)}</div>
+            <div className='end-date'>{ timeLeft(props.trade.endDate) }</div>
             <div className='participants'>
                 <span>Участники торгов</span>
                 {props.trade.participants.length != 0
@@ -75,28 +84,49 @@ const TradeCard = (props: {trade: Trade, setTrade: (trade: Trade) => void }) => 
                     :   'Нет участников'
                 }
             </div>
-            <button type='button' className='show-trades' onClick={() => props.setTrade(props.trade)}>Ход торгов</button> 
+            <button type='button' className='show-trades' onClick={() => props.setTradeId(props.trade.id) }>Ход торгов</button> 
         </div>
     )
 }
 
-const Trade = (props: { trade: Trade | undefined, setTrade: (trade: undefined) => void }) => {
+const Trade = (props: { tradeId: number | undefined, setTradeId: (trade: undefined) => void }) => {
+    const [trade, setTrade] = useState<Trade | undefined>();
+    const [update, setUpdate] = useState(0);
 
-    if (props.trade) {
+    useEffect(() => {
+        let timer = setInterval(() => setUpdate(Math.random()), 1000);
+        return () => clearInterval(timer);
+    }, []);
+
+    useEffect(() => {
+        if (props.tradeId) {
+            fetch('/api/?id=' + props.tradeId)
+                .then((response) => response.json())
+                .then((array) => setTrade(array[0]))
+        }
+    }, [update]);
+
+    const nextTurn = () => {
+        fetch('/api/next_turn/')
+        .then((response) => response.json())
+        .then((status) => console.log(status.status))
+    }
+
+    if (trade) {
         return (
             <div className='trade-scrim'>
                 <div className='trade-info'>
-                    <div className='headline'><span>Ход торгов </span>{props.trade.name + ' (' + startDate(props.trade.startDate) + ')'}</div>
+                    <div className='headline'><span>Ход торгов </span>{trade.name + ' (' + startDate(trade.startDate) + ')'}</div>
                     <div className='info'>Уважаемые участники, во время вашего хода вы можете изменить параметры торгов, указанных в таблице:</div>
                     <table>
                         <tbody>
                         <tr>
                             <td>ХОД</td>                        
-                            {props.trade.participants.length != 0
-                            ?   props.trade.participants.map((participant: Participant) =>
+                            {trade.participants.length != 0
+                            ?   trade.participants.map((participant: Participant) =>
                                     <td className='turn' key={participant.id + 'turn'}>
-                                        {timeLeftFn(participant.turn) && <div className='timer'>
-                                            <div>{timeLeftFn(participant.turn)}</div>
+                                        {participant.activeTurn === 1 && <div className='timer'>
+                                            <div>{ timeLeft(participant.turnEnds) }</div>
                                             <span className='material-symbols-rounded'>hourglass_top</span></div>}
                                     </td>
                                 )
@@ -104,8 +134,8 @@ const Trade = (props: { trade: Trade | undefined, setTrade: (trade: undefined) =
                         </tr>
                         <tr>
                             <td>ПАРАМЕТРЫ И ТРЕБОВАНИЯ</td>                     
-                            {props.trade.participants.length != 0
-                            ?   props.trade.participants.map((participant: Participant, index: number) =>
+                            {trade.participants.length != 0
+                            ?   trade.participants.map((participant: Participant, index: number) =>
                                     <td key={participant.id + 'participant'}>
                                         <div className='participant'>
                                             <span>Участник №{index + 1}</span>{participant.name}
@@ -114,16 +144,19 @@ const Trade = (props: { trade: Trade | undefined, setTrade: (trade: undefined) =
                                 )
                             :   null}
                         </tr>
-                        {props.trade.requirements.length != 0
-                            ?   props.trade.requirements.map((requirement: string, index: number) =>
-                                    <tr className='requirements' key={'requirement' + index}>
+                        {trade.requirements.length != 0
+                            ?   trade.requirements.map((requirement: string, index: number) =>
+                                    <tr key={'requirement' + index}>
                                         <td>{requirement}</td>
-                                        {props.trade && props.trade.participants.length != 0
-                                            ?   props.trade && props.trade.participants.map((participant: Participant) =>
+                                        {trade && trade.participants.length != 0
+                                            ?   trade && trade.participants.map((participant: Participant) =>
                                                     <td key={participant.id + participant.bids[index][0]}>
-                                                        {participant.bids[index].map((bid: string, bidIndex: number) => 
-                                                            <div className='bid' key={participant.id + participant.bids[index][0] + bidIndex} >{bid}</div>
-                                                        )}
+                                                        {participant.bids[index].length === 1
+                                                            ? participant.bids[index].map((bid: string, bidIndex: number) => 
+                                                            <div className='bid' key={participant.id + participant.bids[index][0] + bidIndex} >{bid}</div>)
+                                                            : participant.bids[index].map((bid: string, bidIndex: number) => 
+                                                            <div className={'bid price price-' + bidIndex} key={participant.id + participant.bids[index][0] + bidIndex} >{Number(bid).toLocaleString('ru')} руб</div>)
+                                                        }
                                                     </td>
                                                 )
                                             :   null}
@@ -132,7 +165,10 @@ const Trade = (props: { trade: Trade | undefined, setTrade: (trade: undefined) =
                             :   null}
                         </tbody>
                     </table>
-                    <button type='button' className='close-trade' onClick={() => props.setTrade(undefined)}><span className='material-symbols-rounded'>close</span>Закрыть</button>
+                    <div className='btns'>
+                        <button type='button' className='next' onClick={() => nextTurn()}><span className='material-symbols-rounded'>next_plan</span>Следующий ход</button>
+                        <button type='button' className='close' onClick={() => props.setTradeId(undefined)}><span className='material-symbols-rounded'>close</span>Закрыть</button>
+                    </div>
                 </div>
             </div>
         )
@@ -143,13 +179,7 @@ const Trade = (props: { trade: Trade | undefined, setTrade: (trade: undefined) =
 
 const App = () => {
     const [trades, setTrades] = useState([]);
-    const [update, setUpdate] = useState(0);
-    const [activeTrade, setActiveTrade] = useState<Trade | undefined>();
-
-    let IntervalId: any;
-    if (!IntervalId) {
-        IntervalId = setInterval(() => setUpdate(Math.random()), 1000);
-    }
+    const [activeTrade, setActiveTrade] = useState<number | undefined>();
 
     useEffect(() => {
         fetch('/api/')
@@ -162,18 +192,18 @@ const App = () => {
             <main>
                 {trades.length != 0 
                     ?   trades.map((trade: Trade) =>
-                            <TradeCard trade={trade} key={trade.id} setTrade={setActiveTrade}/>
+                            <TradeCard trade={trade} key={trade.id} setTradeId={setActiveTrade}/>
                         )
                     :   'Нет активных торгов'}
             </main>
             <header>
-                Header
+                Lotus Trade
                 <img src='/img/LOGO_LOTUS.svg' alt='logo' />
             </header>
             <footer>Footer</footer>
-            <Trade trade={activeTrade} setTrade={setActiveTrade}/>
+            { activeTrade ? <Trade tradeId={activeTrade} setTradeId={setActiveTrade}/> : null }
         </>
     );
 }
 
-ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(<BrowserRouter><App /></BrowserRouter>);
+ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(<App />);

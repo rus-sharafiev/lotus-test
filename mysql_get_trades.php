@@ -4,46 +4,37 @@ header("Content-Type: application/json; charset=UTF-8");
 try {
     $mysqli = new mysqli("localhost", "root", "", "lotus");
 } catch (mysqli_sql_exception $e) {
-    exit(json_encode(['status' => 'error', 'error' => $e->getMessage()], JSON_UNESCAPED_UNICODE));
+    exit(json_encode(['status' => 'error', 'error' => $e -> getMessage()], JSON_UNESCAPED_UNICODE));
 }
 
 if (!$mysqli -> set_charset("utf8")) {
     exit();
 }
 
-$output = Array();
+$id = $_GET['id'] ?? NULL;
+if ( $id === NULL ) { $and_id = ''; } else { $and_id = 'AND t.id = ' . $id; }
 
 $query = "  SELECT
-                t.id,
                 JSON_ARRAYAGG(JSON_OBJECT(
                     'id',
                     t.id,
                     'name',
                     t.name, 
                     'startDate',
-                    t.start_date,
+                    t.start,
                     'endDate',
-                    t.end_date,
+                    t.end,
                     'requirements',
-                    (
-                        SELECT JSON_ARRAYAGG(r.requirements)
-                        FROM (
-                            SELECT DISTINCT
-                                requirements.trade_id,
-                                requirements.requirements
-                            FROM trades
-                            JOIN requirements ON trades.id = requirements.trade_id
-                        ) r
-                        WHERE t.id = r.trade_id
-                    ),
+                    t.requirements,
                     'participants',
                     (
-                        SELECT JSON_ARRAYAGG(JSON_OBJECT('id', p.id, 'turn', p.turn, 'name', p.name, 'bids', p.bids))
+                        SELECT JSON_ARRAYAGG(JSON_OBJECT('id', p.id, 'activeTurn', p.active_turn, 'turnEnds', p.turn_ends, 'name', p.name, 'bids', p.bids))
                         FROM (
                             SELECT DISTINCT
                                 participants.trade_id,
                                 participants.id,
-                                participants.turn,
+                                participants.active_turn,
+                                participants.turn_ends,
                                 participants.name,
                                 participants.bids
                             FROM trades
@@ -51,13 +42,15 @@ $query = "  SELECT
                         ) p
                         WHERE t.id = p.trade_id
                     )
-                ))
+                )),
+                t.active
             FROM trades t
-            GROUP BY t.id;
+            WHERE t.active = 1 $and_id
+            GROUP BY t.active;
         ";
 
 $result = $mysqli -> query($query);
-while ($trade = $result -> fetch_column(1)) {
+while ($trade = $result -> fetch_column(0)) {
     echo $trade;
 }
 
